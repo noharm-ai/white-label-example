@@ -52,17 +52,37 @@ function Copyright() {
 
 export default function App() {
   const [loading, setLoading] = useState(false);
-  const [prescriptionId, setPrescriptionId] = useState(0);
+  const [prescriptionLoaded, setPrescriptionLoaded] = useState(false);
   const classes = useStyles();
+  const prescriptionId = 405; // define prescription id
   const noharmUrl = process.env.REACT_APP_NOHARM_URL;
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   const addPrescription = () => {
     setLoading(true);
 
-    setTimeout(() => {
-      setPrescriptionId(13);
-      setLoading(false);
-    }, 1500);
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        accept: "application/json, text/plain, */*",
+        "x-api-key": process.env.REACT_APP_API_KEY,
+      },
+      body: JSON.stringify({
+        idPatient: 800,
+        drugs: [
+          { id: prescriptionId + 100, idDrug: 1, idFrequency: 8, dose: 10 },
+          { id: prescriptionId + 101, idDrug: 2, idFrequency: 8, dose: 10 },
+        ],
+      }),
+    };
+    fetch(`${apiUrl}/prescriptions/static/${prescriptionId}`, requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("response", data);
+        setPrescriptionLoaded(true);
+        setLoading(false);
+      });
   };
 
   return (
@@ -78,23 +98,27 @@ export default function App() {
             <Box display="flex" justifyContent="flex-end">
               <Fab variant="extended" color="primary" onClick={addPrescription}>
                 <AddIcon className={classes.extendedIcon} />
-                Adicionar
+                Add
               </Fab>
             </Box>
           </Grid>
         </Grid>
 
         <Paper elevation={3} className={classes.paper}>
-          {prescriptionId !== 0 && (
+          {prescriptionLoaded && (
             <iframe
               src={`${noharmUrl}wl/prescricao/${prescriptionId}`}
               title="NoHarm"
               className={classes.wlNoHarm}
             ></iframe>
           )}
-          {prescriptionId === 0 && (
+          {!prescriptionLoaded && (
             <Typography variant="h6" component="h1" align="center">
-              Nenhuma prescrição encontrada
+              No prescription found.{" "}
+              <a href="#" onClick={addPrescription}>
+                {" "}
+                Add a new prescription
+              </a>
             </Typography>
           )}
         </Paper>
